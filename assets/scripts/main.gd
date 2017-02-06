@@ -9,19 +9,27 @@ const SELECT_COLOR = Color(0, 1, 0, 0.24)
 const PATH_IMG_UNIT = 'res://assets/art/units/'
 const PATH_IMG_UNIT_TYPE = 'res://assets/art/ui/troop/'
 
+
+var img_speed1 = preload('res://assets/art/ui/speed/speed1.png')
+var img_speed2 = preload('res://assets/art/ui/speed/speed2.png')
+
 onready var panel = get_node("CanvasLayer/ui/functionalPanel")
 onready var units = get_node('Players/Player/Units/Regiment1') 
+onready var units2 = get_node('Players/Player/Units/Regiment2') 
 onready var army = get_node('Players/Player/Units/') 
 onready var armyGrid = get_node('CanvasLayer/ui/armyPanel/GridContainer') 
 
 var sel_units = []
+var sel_regiment = []
 var psevdoform_start_pos = Vector2()
 var psevdoform_end_pos = null
 var sel_start_pos = Vector2()
 var sel_end_pos = null
 var psevdoform
-var type_form = 'phalanx'
+
+var propeties = {} #{regiment: {p:v...}}
 var targets = {} #{unit: target_pos}
+
 
 func square(units, m, n): #обобщенная модель для фаланги и квадрата
 	var co = []
@@ -108,7 +116,12 @@ func PlaceUnits(units, form = 'phalanx', result = null): #пост обрабо�
 
 	var co = result[0]
 	var uf = result[1]
-
+	
+	for regiment in get_regiments(units):
+		propeties[regiment]['type_form'] = form
+	var type_form = form
+	#print(type_form)
+	
 	var k = 0
 	var angle = null
 	for unit in units:
@@ -144,10 +157,16 @@ func gen_units(n, tex, node): #генерация юнитов
 		kin.add_child(sp)
 		kin.set_name('Unit' + str(i + 1))
 		node.add_child(kin)
+		
 
 
 func psevdoform_controller(): #управление размещением
 	var d # lkm <---- d ----> o 
+	var type_form = 'phalanx'
+	if sel_regiment != []:
+		type_form = propeties[sel_regiment[0]]['type_form']
+		#print(sel_regiment,propeties)
+		
 	if panel.get_global_pos().y > get_viewport().get_mouse_pos().y: #1)+ panel.get_size().x
 		if Input.is_action_just_pressed('target'):
 			psevdoform_start_pos = get_global_mouse_pos()
@@ -189,7 +208,9 @@ func psevdoform_draw(): #отрисовка модели размещения
 		var uf = psevdoform[1]
 		var pos = 0
 		var angle = null
+
 		for unit in sel_units:	
+			var type_form = propeties[get_regiments([unit])[0]]['type_form']
 			var matrix_pos
 			if type_form in ['phalanx', 'box']:
 				matrix_pos = co[uf[pos].x][uf[pos].y]  
@@ -232,6 +253,7 @@ func select_controller(): #управление выделением
 			for regiment in army.get_children():
 				unit_modulate(regiment.get_children())
 			sel_units = []
+			sel_regiment = []
 			
 			sel_start_pos = get_global_mouse_pos()
 			
@@ -246,6 +268,7 @@ func select_controller(): #управление выделением
 						if isInsideRect(unit.get_pos().x, unit.get_pos().y, sel_start_pos.x, sel_start_pos.y, sel_end_pos.x, sel_end_pos.y):
 							unit_modulate(regiment.get_children(), Color(0,1,0,0.9))
 							sel_units += regiment.get_children()
+							sel_regiment += [regiment]
 							break
 									
 			sel_start_pos = Vector2()  #убираем выделение
@@ -260,45 +283,57 @@ func select_controller(): #управление выделением
 func select_draw(): #отрисовка выделения
 	if sel_end_pos != null:
 		draw_rect(Rect2(sel_start_pos, sel_end_pos - sel_start_pos), SELECT_COLOR)
-					
-func _ready():
-	var type_unit = 'test' 
-	gen_units(COUNT_UNITS, load(PATH_IMG_UNIT + type_unit + '.png'), units)
-	#for unit in units.get_children():
-	#	sel_units.append(unit)
+	
+func army_panel():
 	var i = 1	
 	for regiment in army.get_children():
 		var regiment_button = armyGrid.get_node('TArmy' + str(i))
-		regiment_button.set_button_icon(load(PATH_IMG_UNIT_TYPE + type_unit + '.png'))
+		regiment_button.set_button_icon(load(PATH_IMG_UNIT_TYPE  + 'test.png'))
 		var count = regiment_button.get_node('count')
 		count.set_text(str(regiment.get_child_count()))
 		i += 1
-		
+											
+func _ready():
+	var type_unit = 'test' 
+	gen_units(COUNT_UNITS, load(PATH_IMG_UNIT + type_unit + '.png'), units)
+	gen_units(COUNT_UNITS, load(PATH_IMG_UNIT + type_unit + '.png'), units2)
+	for regiments in get_regiments(units.get_children()):
+		propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
+	for regiments in get_regiments(units2.get_children()):
+		propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
+	army_panel()
 	set_process(true)
+
+func get_regiments(units): #получить объект отряда(ов) по юнитам
+	var regiments = {}
+	for unit in units:
+		regiments[unit.get_parent()] = null
+	return regiments.keys()
 
 func _process(delta):
 	psevdoform_controller()
 	select_controller()
 	move_units()
 	
+	
 func _draw():
 	psevdoform_draw()
 	select_draw()
 
 func _on_phalanx_pressed():
-	type_form = 'phalanx'
+	var type_form = 'phalanx'
 	PlaceUnits(sel_units, type_form)
 
 func _on_box_pressed():
-	type_form = 'box'
+	var type_form = 'box'
 	PlaceUnits(sel_units, type_form)
 
 func _on_wedge_pressed():
-	type_form = 'wedge'
+	var type_form = 'wedge'
 	PlaceUnits(sel_units, type_form)
 
 func _on_carre_pressed():
-	type_form = 'carre'
+	var type_form = 'carre'
 	PlaceUnits(sel_units, type_form)
 
 func _on_turn_l_pressed():
@@ -307,14 +342,13 @@ func _on_turn_l_pressed():
 func _on_turn_r_pressed():
 	pass
 	
-func _on_speed_pressed(me):
-	print(me.get_name())
-	
+func _on_speed_pressed():
+	pass
+	#var s = panel.get_node('GridContainer/speed')
+	#if speed == 1:
+	#	s.set_button_icon(img_speed2)
+	#else:
+	#	s.set_button_icon(img_speed1)
+	#	propeties[] -= 1
 #var thread = Thread.new()
 #thread.start(self, "move_units", [m, unit])
-		
-	
-
-
-
-

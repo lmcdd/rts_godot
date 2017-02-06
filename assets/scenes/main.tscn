@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=1]
+[gd_scene load_steps=12 format=1]
 
 [ext_resource path="res://assets/scripts/main.gd" type="Script" id=1]
 [ext_resource path="res://assets/art/ui/speed/speed1.png" type="Texture" id=2]
@@ -9,7 +9,8 @@
 [ext_resource path="res://assets/art/ui/formation/phalanx.png" type="Texture" id=7]
 [ext_resource path="res://assets/art/ui/formation/box.png" type="Texture" id=8]
 [ext_resource path="res://assets/art/ui/formation/wedge.png" type="Texture" id=9]
-[ext_resource path="res://assets/art/ui/troop/test.png" type="Texture" id=10]
+[ext_resource path="res://assets/art/ui/formation/care.png" type="Texture" id=10]
+[ext_resource path="res://assets/art/ui/troop/test.png" type="Texture" id=11]
 
 [node name="Game" type="Node2D"]
 
@@ -149,7 +150,7 @@ icon = ExtResource( 6 )
 flat = false
 align = 0
 
-[node name="Panel" type="Panel" parent="CanvasLayer/ui/functionalPanel/GridContainer"]
+[node name="void" type="Panel" parent="CanvasLayer/ui/functionalPanel/GridContainer"]
 
 focus/ignore_mouse = false
 focus/stop_mouse = true
@@ -224,7 +225,7 @@ margin/bottom = 80.0
 toggle_mode = false
 enabled_focus_mode = 2
 shortcut = null
-icon = ExtResource( 9 )
+icon = ExtResource( 10 )
 flat = false
 align = 0
 
@@ -270,7 +271,7 @@ margin/bottom = 38.0
 toggle_mode = false
 enabled_focus_mode = 2
 shortcut = null
-icon = ExtResource( 10 )
+icon = ExtResource( 11 )
 flat = false
 
 [node name="count" type="Label" parent="CanvasLayer/ui/armyPanel/GridContainer/TArmy1"]
@@ -328,7 +329,6 @@ flat = false
 
 [node name="count" type="Label" parent="CanvasLayer/ui/armyPanel/GridContainer/TArmy2"]
 
-visibility/visible = false
 anchor/left = 1
 anchor/top = 1
 anchor/right = 1
@@ -1052,6 +1052,8 @@ drag_margin/bottom = 0.2
 [node name="Units" type="Node" parent="Players/Player"]
 
 [node name="Regiment1" type="Node" parent="Players/Player/Units"]
+
+[node name="Regiment2" type="Node" parent="Players/Player/Units"]
 
 [connection signal="pressed" from="CanvasLayer/ui/functionalPanel/GridContainer/speed" to="." method="_on_speed_pressed"]
 
