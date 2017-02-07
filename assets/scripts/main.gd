@@ -19,7 +19,7 @@ onready var units2 = get_node('Players/Player/Units/Regiment2')
 onready var army = get_node('Players/Player/Units/') 
 onready var armyGrid = get_node('CanvasLayer/ui/armyPanel/GridContainer') 
 
-var sel_units = []
+#var sel_units = []
 var sel_regiment = []
 var psevdoform_start_pos = Vector2()
 var psevdoform_end_pos = null
@@ -103,7 +103,8 @@ func carre(units): #каре
 ##############################################
 
 	
-func PlaceUnits(units, form = 'phalanx', result = null): #пост обработка матрицы построения
+func PlaceUnits(regiments, form = 'phalanx', result = null): #пост обработка матрицы построения
+	var units = get_units(regiments)
 	if result == null:
 		if form == 'phalanx':
 			result = phalanx(units)
@@ -117,13 +118,14 @@ func PlaceUnits(units, form = 'phalanx', result = null): #пост обрабо�
 	var co = result[0]
 	var uf = result[1]
 	
-	for regiment in get_regiments(units):
+	for regiment in regiments:
 		propeties[regiment]['type_form'] = form
 	var type_form = form
 	#print(type_form)
 	
 	var k = 0
 	var angle = null
+
 	for unit in units:
 		var matrix_pos
 		if form in ['phalanx', 'box']:
@@ -166,7 +168,7 @@ func psevdoform_controller(): #управление размещением
 	if sel_regiment != []:
 		type_form = propeties[sel_regiment[0]]['type_form']
 		#print(sel_regiment,propeties)
-		
+	var sel_units = get_units(sel_regiment)
 	if panel.get_global_pos().y > get_viewport().get_mouse_pos().y: #1)+ panel.get_size().x
 		if Input.is_action_just_pressed('target'):
 			psevdoform_start_pos = get_global_mouse_pos()
@@ -190,7 +192,7 @@ func psevdoform_controller(): #управление размещением
 					update()
 	
 		if Input.is_action_just_released('target'):
-			PlaceUnits(sel_units, type_form, psevdoform)
+			PlaceUnits(sel_regiment, type_form, psevdoform)
 			d = null
 			psevdoform = null
 			update()
@@ -208,7 +210,7 @@ func psevdoform_draw(): #отрисовка модели размещения
 		var uf = psevdoform[1]
 		var pos = 0
 		var angle = null
-
+		var sel_units = get_units(sel_regiment)
 		for unit in sel_units:	
 			var type_form = propeties[get_regiments([unit])[0]]['type_form']
 			var matrix_pos
@@ -252,7 +254,7 @@ func select_controller(): #управление выделением
 			
 			for regiment in army.get_children():
 				unit_modulate(regiment.get_children())
-			sel_units = []
+			#sel_units = []
 			sel_regiment = []
 			
 			sel_start_pos = get_global_mouse_pos()
@@ -262,12 +264,12 @@ func select_controller(): #управление выделением
 			update()
 			
 		if Input.is_action_just_released('select'): #при отпущенной ЛКМ выделяем все попавшие в выделение войска (не юниты, а отряды)
-			if 	sel_end_pos != null:
+			if sel_end_pos != null:
 				for regiment in army.get_children():
 					for unit in regiment.get_children():
 						if isInsideRect(unit.get_pos().x, unit.get_pos().y, sel_start_pos.x, sel_start_pos.y, sel_end_pos.x, sel_end_pos.y):
 							unit_modulate(regiment.get_children(), Color(0,1,0,0.9))
-							sel_units += regiment.get_children()
+							#sel_units += regiment.get_children()
 							sel_regiment += [regiment]
 							break
 									
@@ -297,10 +299,14 @@ func _ready():
 	var type_unit = 'test' 
 	gen_units(COUNT_UNITS, load(PATH_IMG_UNIT + type_unit + '.png'), units)
 	gen_units(COUNT_UNITS, load(PATH_IMG_UNIT + type_unit + '.png'), units2)
-	for regiments in get_regiments(units.get_children()):
-		propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
-	for regiments in get_regiments(units2.get_children()):
-		propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
+	for regiment in army.get_children():
+		print(regiment.get_name())
+		propeties[regiment] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
+		
+	#for regiments in get_regiments(units.get_children()):
+	#	propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
+	#for regiments in get_regiments(units2.get_children()):
+	#	propeties[regiments] = {'speed':1, 'type_form':'phalanx', 'type_troop':''}
 	army_panel()
 	set_process(true)
 
@@ -309,6 +315,14 @@ func get_regiments(units): #получить объект отряда(ов) п�
 	for unit in units:
 		regiments[unit.get_parent()] = null
 	return regiments.keys()
+
+func get_units(regiments): #получить объект юнитов по отряду
+	var units = {}
+	for regiment in regiments:
+		for unit in regiment.get_children():
+			units[unit] = null
+	return units.keys()
+	
 
 func _process(delta):
 	psevdoform_controller()
@@ -322,19 +336,19 @@ func _draw():
 
 func _on_phalanx_pressed():
 	var type_form = 'phalanx'
-	PlaceUnits(sel_units, type_form)
+	PlaceUnits(sel_regiment, type_form)
 
 func _on_box_pressed():
 	var type_form = 'box'
-	PlaceUnits(sel_units, type_form)
+	PlaceUnits(sel_regiment, type_form)
 
 func _on_wedge_pressed():
 	var type_form = 'wedge'
-	PlaceUnits(sel_units, type_form)
+	PlaceUnits(sel_regiment, type_form)
 
 func _on_carre_pressed():
 	var type_form = 'carre'
-	PlaceUnits(sel_units, type_form)
+	PlaceUnits(sel_regiment, type_form)
 
 func _on_turn_l_pressed():
 	pass
