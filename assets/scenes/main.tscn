@@ -255,6 +255,11 @@ icon = ExtResource( 11 )
 flat = false
 align = 0
 
+[node name="CanvasModulate" type="CanvasModulate" parent="CanvasLayer/ui/functionalPanel/GridContainer"]
+
+transform/pos = Vector2( 206.26, -396.559 )
+color = Color( 1, 0.880601, 0.761719, 1 )
+
 [node name="armyPanel" type="Panel" parent="CanvasLayer/ui"]
 
 anchor/top = 1
@@ -1051,6 +1056,8 @@ expand = true
 stretch_mode = 0
 
 [node name="Players" type="Node" parent="."]
+
+editor/display_folded = true
 
 [node name="Player" type="Node" parent="Players"]
 
